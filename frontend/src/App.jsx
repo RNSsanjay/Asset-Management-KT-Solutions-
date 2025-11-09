@@ -5,14 +5,12 @@ import Layout from '@/components/Layout';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import Assets from '@/pages/Assets';
+import Employees from '@/pages/Employees';
+import Categories from '@/pages/Categories';
+import AssetHistory from '@/pages/AssetHistory';
+import StockView from '@/pages/StockView';
 import useAuthStore from '@/store/authStore';
-
-// Placeholder components for other pages
-const Assets = () => <div className="text-2xl font-bold">Assets Page - Coming Soon</div>;
-const Employees = () => <div className="text-2xl font-bold">Employees Page - Coming Soon</div>;
-const Categories = () => <div className="text-2xl font-bold">Categories Page - Coming Soon</div>;
-const AssetHistory = () => <div className="text-2xl font-bold">Asset History Page - Coming Soon</div>;
-const StockView = () => <div className="text-2xl font-bold">Stock View Page - Coming Soon</div>;
 
 function App() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

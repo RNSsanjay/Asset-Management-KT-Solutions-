@@ -10,19 +10,11 @@ const AssetHistory = sequelize.define('AssetHistory', {
     assetId: {
         type: DataTypes.UUID,
         allowNull: false,
-        field: 'asset_id',
-        references: {
-            model: 'assets',
-            key: 'id'
-        }
+        field: 'asset_id'
     },
     employeeId: {
         type: DataTypes.UUID,
-        field: 'employee_id',
-        references: {
-            model: 'employees',
-            key: 'id'
-        }
+        field: 'employee_id'
     },
     action: {
         type: DataTypes.ENUM('Purchase', 'Issue', 'Return', 'Repair', 'Scrap', 'Transfer'),
@@ -42,11 +34,7 @@ const AssetHistory = sequelize.define('AssetHistory', {
     },
     performedBy: {
         type: DataTypes.UUID,
-        field: 'performed_by',
-        references: {
-            model: 'users',
-            key: 'id'
-        }
+        field: 'performed_by'
     },
     notes: {
         type: DataTypes.TEXT

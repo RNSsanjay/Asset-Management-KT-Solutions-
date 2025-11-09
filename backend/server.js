@@ -75,8 +75,10 @@ const startServer = async () => {
     try {
         await testConnection();
 
-        // Sync all models
-        await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
+        // Note: Run "node init-db.js" first to initialize the database tables
+        // This will just check if tables exist, not recreate them
+        await sequelize.sync();
+
         console.log('✅ Database models synchronized');
 
         app.listen(PORT, () => {

@@ -41,6 +41,7 @@ const User = sequelize.define('User', {
         defaultValue: 'active'
     }
 }, {
+    tableName: 'users',
     timestamps: true,
     hooks: {
         beforeCreate: async (user) => {
