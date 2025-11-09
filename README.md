@@ -106,10 +106,6 @@ After running seed.js, use these credentials:
 - **Password**: manager123
 - **Access**: Manage assets and employees
 
-### Employee Account
-- **Email**: john.doe@company.com
-- **Password**: employee123
-- **Access**: View assigned assets only
 
 ## Usage
 
@@ -247,3 +243,4 @@ Asset-Management-KT-Solutions-/
 ## Support
 
 For issues or questions, check the code comments or contact the development team.
+
