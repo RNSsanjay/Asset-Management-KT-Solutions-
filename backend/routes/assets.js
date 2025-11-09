@@ -7,7 +7,8 @@ const {
     createAsset,
     updateAsset,
     deleteAsset,
-    getStockSummary
+    getStockSummary,
+    getMyAssets
 } = require('../controllers/assetController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -25,6 +26,7 @@ const assetValidation = [
 router.use(protect);
 
 router.get('/stock/summary', getStockSummary);
+router.get('/my-assets', getMyAssets);
 router.get('/', getAssets);
 router.get('/:id', getAssetById);
 router.post('/', authorize('Admin', 'Manager'), upload.single('image'), assetValidation, createAsset);

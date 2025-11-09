@@ -2,6 +2,11 @@
     "name": "asset-management-frontend",
     "version": "1.0.0",
     "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
     "dependencies": {
         "@radix-ui/react-alert-dialog": "^1.0.5",
         "@radix-ui/react-dialog": "^1.0.5",
@@ -39,28 +44,5 @@
         "postcss": "^8.4.33",
         "tailwindcss": "^3.4.1",
         "vite": "^5.4.21"
-    },
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview",
-        "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
     }
 }

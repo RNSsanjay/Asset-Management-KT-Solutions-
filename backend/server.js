@@ -8,54 +8,65 @@ const rateLimit = require('express-rate-limit');
 const { sequelize, testConnection } = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/error');
 
-// Import models to register associations
+// Load all models
 require('./models');
 
-// Import routes
+// Routes
 const authRoutes = require('./routes/auth');
 const employeeRoutes = require('./routes/employees');
 const categoryRoutes = require('./routes/categories');
 const assetRoutes = require('./routes/assets');
 const assetHistoryRoutes = require('./routes/assetHistory');
+const assetRequestRoutes = require('./routes/assetRequests');
 
 const app = express();
 
-// Security middleware
+// Security
 app.use(helmet());
 
-// Rate limiting
+// Rate limiter to prevent abuse
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use('/api/', limiter);
 
-// CORS
+// Enable CORS for frontend
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true
 }));
 
-// Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logging
+// Disable caching in development
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        next();
+    });
+}
+
+// Dev logging
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
-// Static files
+// Upload folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
+// Setup all API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/asset-history', assetHistoryRoutes);
+app.use('/api/asset-requests', assetRequestRoutes);
 
-// Health check
+// Simple health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
@@ -64,28 +75,28 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Error handling
+// Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Sync database and start server
+// Start the server
 const startServer = async () => {
     try {
+        // Test DB connection first
         await testConnection();
 
-        // Note: Run "node init-db.js" first to initialize the database tables
-        // This will just check if tables exist, not recreate them
+        // Sync database models (run init-db.js first for initial setup)
         await sequelize.sync();
 
-        console.log('✅ Database models synchronized');
+        console.log('Database connected successfully');
 
         app.listen(PORT, () => {
-            console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+            console.log(`Server running on port ${PORT}`);
         });
     } catch (error) {
-        console.error('❌ Failed to start server:', error);
+        console.error('Failed to start server:', error);
         process.exit(1);
     }
 };

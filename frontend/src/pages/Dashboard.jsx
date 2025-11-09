@@ -17,15 +17,86 @@ import useAuthStore from '@/store/authStore';
 
 export default function Dashboard() {
     const user = useAuthStore((state) => state.user);
+    const isEmployee = user?.role === 'Employee';
 
+    // Fetch assigned assets for employees
+    const { data: myAssetsData } = useQuery({
+        queryKey: ['my-assets'],
+        queryFn: async () => {
+            const response = await api.get('/assets/my-assets');
+            return response.data;
+        },
+        enabled: isEmployee,
+    });
+
+    // Fetch stock summary for admin/manager
     const { data: stockData } = useQuery({
         queryKey: ['stock-summary'],
         queryFn: async () => {
             const response = await api.get('/assets/stock/summary');
             return response.data;
         },
+        enabled: !isEmployee,
     });
 
+    // Employee Dashboard
+    if (isEmployee) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
+                    <p className="text-muted-foreground mt-2">
+                        Welcome back, {user?.name}! Here are your assigned assets.
+                    </p>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>My Assigned Assets</CardTitle>
+                        <CardDescription>
+                            Assets currently assigned to you ({myAssetsData?.assets?.length || 0})
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {!myAssetsData?.assets || myAssetsData.assets.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p>No assets assigned to you yet</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {myAssetsData.assets.map((asset) => (
+                                    <div
+                                        key={asset.id}
+                                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                                    >
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold">{asset.make} {asset.model}</h3>
+                                            <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                                                <span>Tag: {asset.assetTag}</span>
+                                                <span>Serial: {asset.serialNumber}</span>
+                                                <span>Category: {asset.category?.name}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium">
+                                                {asset.condition}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                {asset.location || 'No location'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // Admin/Manager Dashboard
     const stats = [
         {
             name: 'Total Assets',

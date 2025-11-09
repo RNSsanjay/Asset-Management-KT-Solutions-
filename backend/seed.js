@@ -27,6 +27,15 @@ const seedData = async () => {
             status: 'active'
         });
 
+        // Create employee user (matches employee record below)
+        await User.create({
+            name: 'John Doe',
+            email: 'john.doe@company.com',
+            password: 'employee123',
+            role: 'Employee',
+            status: 'active'
+        });
+
         console.log('✅ Users created');
 
         // Create sample employees
@@ -92,6 +101,9 @@ const seedData = async () => {
         console.log('\nManager:');
         console.log('  Email: manager@assetmanagement.com');
         console.log('  Password: manager123');
+        console.log('\nEmployee:');
+        console.log('  Email: john.doe@company.com');
+        console.log('  Password: employee123');
 
         process.exit(0);
     } catch (error) {

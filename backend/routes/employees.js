@@ -7,7 +7,8 @@ const {
     createEmployee,
     updateEmployee,
     deleteEmployee,
-    getDepartments
+    getDepartments,
+    getEmployeeAssets
 } = require('../controllers/employeeController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -23,6 +24,7 @@ const employeeValidation = [
 router.use(protect);
 
 router.get('/departments/list', getDepartments);
+router.get('/:id/assets', getEmployeeAssets);
 router.get('/', getEmployees);
 router.get('/:id', getEmployeeById);
 router.post('/', authorize('Admin', 'Manager'), employeeValidation, createEmployee);

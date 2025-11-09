@@ -3,9 +3,7 @@ const { Op } = require('sequelize');
 const fs = require('fs').promises;
 const path = require('path');
 
-// @desc    Get all assets
-// @route   GET /api/assets
-// @access  Private
+// Get all assets
 const getAssets = async (req, res, next) => {
     try {
         const {
@@ -14,7 +12,8 @@ const getAssets = async (req, res, next) => {
             search,
             status,
             categoryId,
-            branch
+            branch,
+            employeeId
         } = req.query;
         const offset = (page - 1) * limit;
 
@@ -265,11 +264,63 @@ const getStockSummary = async (req, res, next) => {
     }
 };
 
+// Get assets assigned to current user/employee
+const getMyAssets = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        // Find employee record linked to this user email
+        const employee = await Employee.findOne({
+            where: { email: req.user.email }
+        });
+
+        if (!employee) {
+            return res.json({ assets: [] });
+        }
+
+        // Get latest assignment for each asset assigned to this employee
+        const assignments = await AssetHistory.findAll({
+            where: {
+                employeeId: employee.id,
+                action: 'Issue'
+            },
+            attributes: ['assetId'],
+            group: ['assetId', 'id'],
+            order: [['actionDate', 'DESC']],
+            raw: true
+        });
+
+        if (assignments.length === 0) {
+            return res.json({ assets: [] });
+        }
+
+        const assetIds = [...new Set(assignments.map(a => a.assetId))];
+
+        // Get assets that are still assigned (not returned)
+        const assets = await Asset.findAll({
+            where: {
+                id: assetIds,
+                status: 'Assigned'
+            },
+            include: [{
+                model: Category,
+                as: 'category',
+                attributes: ['id', 'name', 'code']
+            }]
+        });
+
+        res.json({ assets });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAssets,
     getAssetById,
     createAsset,
     updateAsset,
     deleteAsset,
-    getStockSummary
+    getStockSummary,
+    getMyAssets
 };

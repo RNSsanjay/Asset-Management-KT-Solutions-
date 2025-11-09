@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit, Trash2, Users, X, Mail, Phone, Briefcase } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Plus, Search, Edit, Trash2, Users, X, Mail, Phone, Briefcase, Package } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ export default function Employees() {
     const [statusFilter, setStatusFilter] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [viewingEmployeeId, setViewingEmployeeId] = useState(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -36,6 +37,16 @@ export default function Employees() {
             const response = await api.get(`/employees?${params}`);
             return response.data;
         },
+    });
+
+    // Fetch employee assets when viewing
+    const { data: employeeAssetsData } = useQuery({
+        queryKey: ['employee-assets', viewingEmployeeId],
+        queryFn: async () => {
+            const response = await api.get(`/employees/${viewingEmployeeId}/assets`);
+            return response.data;
+        },
+        enabled: !!viewingEmployeeId,
     });
 
     // Fetch departments
@@ -297,6 +308,14 @@ export default function Employees() {
                                                 </td>
                                                 <td className="py-3 px-4 text-right">
                                                     <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => setViewingEmployeeId(employee.id)}
+                                                            title="View Assets"
+                                                        >
+                                                            <Package className="h-4 w-4" />
+                                                        </Button>
                                                         {canManage ? (
                                                             <>
                                                                 <Button
@@ -315,7 +334,7 @@ export default function Employees() {
                                                                 </Button>
                                                             </>
                                                         ) : (
-                                                            <span className="text-sm text-muted-foreground">No actions</span>
+                                                            <span className="text-sm text-muted-foreground">View only</span>
                                                         )}
                                                     </div>
                                                 </td>
@@ -506,6 +525,120 @@ export default function Employees() {
                 }}
                 onConfirm={confirmDelete}
             />
+
+            {/* Employee Assets Modal */}
+            {viewingEmployeeId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-background rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4"
+                    >
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold">
+                                        Employee Assets
+                                    </h2>
+                                    <p className="text-muted-foreground">
+                                        {employeeAssetsData?.employee?.name} - {employeeAssetsData?.employee?.employeeId}
+                                    </p>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => setViewingEmployeeId(null)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Currently Assigned Assets */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Currently Assigned Assets ({employeeAssetsData?.totalAssigned || 0})</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {!employeeAssetsData?.currentAssignments || employeeAssetsData.currentAssignments.length === 0 ? (
+                                            <div className="text-center py-8 text-muted-foreground">
+                                                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                                <p>No assets currently assigned</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {employeeAssetsData.currentAssignments.map((asset) => (
+                                                    <div
+                                                        key={asset.id}
+                                                        className="flex items-center justify-between p-4 border rounded-lg"
+                                                    >
+                                                        <div>
+                                                            <h4 className="font-semibold">{asset.make} {asset.model}</h4>
+                                                            <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                                                                <span>Tag: {asset.assetTag}</span>
+                                                                <span>Serial: {asset.serialNumber}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${asset.condition === 'Excellent' ? 'bg-green-100 text-green-800' :
+                                                                    asset.condition === 'Good' ? 'bg-blue-100 text-blue-800' :
+                                                                        asset.condition === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
+                                                                            'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                {asset.condition}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Asset History */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Asset History</CardTitle>
+                                        <CardDescription>All asset transactions for this employee</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {!employeeAssetsData?.history || employeeAssetsData.history.length === 0 ? (
+                                            <div className="text-center py-8 text-muted-foreground">
+                                                <p>No history available</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {employeeAssetsData.history.map((record) => (
+                                                    <div
+                                                        key={record.id}
+                                                        className="flex items-center justify-between p-3 border rounded-lg text-sm"
+                                                    >
+                                                        <div className="flex-1">
+                                                            <div className="font-medium">
+                                                                {record.asset?.make} {record.asset?.model}
+                                                            </div>
+                                                            <div className="text-muted-foreground">
+                                                                {record.asset?.assetTag}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <span className={`px-2 py-1 rounded text-xs font-medium ${record.action === 'Issue' ? 'bg-green-100 text-green-800' :
+                                                                    record.action === 'Return' ? 'bg-blue-100 text-blue-800' :
+                                                                        'bg-gray-100 text-gray-800'
+                                                                }`}>
+                                                                {record.action}
+                                                            </span>
+                                                            <span className="text-muted-foreground">
+                                                                {formatDate(record.actionDate)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

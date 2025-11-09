@@ -1,4 +1,4 @@
-const { Employee } = require('../models');
+const { Employee, Asset, AssetHistory } = require('../models');
 const { Op } = require('sequelize');
 
 // @desc    Get all employees
@@ -104,9 +104,7 @@ const deleteEmployee = async (req, res, next) => {
     }
 };
 
-// @desc    Get departments list
-// @route   GET /api/employees/departments/list
-// @access  Private
+// Get departments list
 const getDepartments = async (req, res, next) => {
     try {
         const departments = await Employee.findAll({
@@ -120,11 +118,76 @@ const getDepartments = async (req, res, next) => {
     }
 };
 
+// Get assets assigned to specific employee
+const getEmployeeAssets = async (req, res, next) => {
+    try {
+        const employeeId = req.params.id;
+
+        // Check if employee exists
+        const employee = await Employee.findByPk(employeeId);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        // Get latest assignment for each asset assigned to this employee
+        const assignments = await AssetHistory.findAll({
+            where: {
+                employeeId: employeeId,
+                action: 'Issue'
+            },
+            attributes: ['assetId'],
+            group: ['assetId', 'id'],
+            order: [['actionDate', 'DESC']],
+            raw: true
+        });
+
+        if (assignments.length === 0) {
+            return res.json({
+                employee,
+                assets: [],
+                currentAssignments: [],
+                history: []
+            });
+        }
+
+        const assetIds = [...new Set(assignments.map(a => a.assetId))];
+
+        // Get currently assigned assets
+        const currentAssets = await Asset.findAll({
+            where: {
+                id: assetIds,
+                status: 'Assigned'
+            }
+        });
+
+        // Get all history for this employee
+        const history = await AssetHistory.findAll({
+            where: { employeeId: employeeId },
+            include: [{
+                model: Asset,
+                as: 'asset',
+                attributes: ['id', 'assetTag', 'serialNumber', 'make', 'model', 'status']
+            }],
+            order: [['actionDate', 'DESC']]
+        });
+
+        res.json({
+            employee,
+            currentAssignments: currentAssets,
+            totalAssigned: currentAssets.length,
+            history
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getEmployees,
     getEmployeeById,
     createEmployee,
     updateEmployee,
     deleteEmployee,
-    getDepartments
+    getDepartments,
+    getEmployeeAssets
 };

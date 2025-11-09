@@ -16,19 +16,21 @@ import {
     Sun,
     ChevronDown,
     User,
+    FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useAuthStore from '@/store/authStore';
 import useThemeStore from '@/store/themeStore';
 import { cn } from '@/lib/utils';
 
-const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Assets', href: '/assets', icon: Package },
-    { name: 'Employees', href: '/employees', icon: Users },
-    { name: 'Categories', href: '/categories', icon: FolderOpen },
-    { name: 'Asset History', href: '/history', icon: History },
-    { name: 'Stock View', href: '/stock', icon: BarChart3 },
+const allNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Employee'] },
+    { name: 'Assets', href: '/assets', icon: Package, roles: ['Admin', 'Manager'] },
+    { name: 'Employees', href: '/employees', icon: Users, roles: ['Admin', 'Manager'] },
+    { name: 'Categories', href: '/categories', icon: FolderOpen, roles: ['Admin', 'Manager'] },
+    { name: 'Asset History', href: '/history', icon: History, roles: ['Admin', 'Manager'] },
+    { name: 'Stock View', href: '/stock', icon: BarChart3, roles: ['Admin', 'Manager'] },
+    { name: 'Asset Requests', href: '/requests', icon: FileText, roles: ['Admin', 'Manager', 'Employee'] },
 ];
 
 export default function Layout() {
@@ -37,6 +39,11 @@ export default function Layout() {
     const location = useLocation();
     const { user, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
+
+    // Filter navigation based on user role
+    const navigation = allNavigation.filter(item =>
+        item.roles.includes(user?.role || 'Employee')
+    );
 
     const handleLogout = () => {
         logout();

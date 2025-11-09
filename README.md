@@ -1,343 +1,249 @@
 # Asset Management System
 
-A modern, full-stack web application for managing company assets, built with Node.js, Express, PostgreSQL, and React.
+A web application for managing company assets, employees, and tracking asset assignments.
 
-![Asset Management System](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+## Features
 
-## 🚀 Features
+### Role-Based Access Control
+- **Admin**: Full system access - manage users, assets, employees, and view all reports
+- **Manager**: Manage assets, employees, assignments - cannot delete critical data
+- **Employee**: View personal dashboard and assigned assets only
 
 ### Core Functionality
-- **Employee Management** - Add, edit, delete, and view employee profiles with search and filtering
-- **Asset Category Management** - Organize assets into customizable categories
-- **Asset Master** - Complete asset lifecycle management with image uploads
-- **Stock View** - Dashboard with charts showing asset distribution and value
-- **Issue/Return/Scrap Assets** - Track asset assignments and movements
-- **Asset History** - Complete timeline of asset lifecycle events
-- **PDF Reports** - Generate and download detailed asset reports
+- Asset tracking and management
+- Employee management  
+- Category organization
+- Asset assignment/return workflow
+- Complete asset history logging
+- Stock view and reports
+- Real-time dashboard with statistics
 
-### Technical Features
-- 🔐 **JWT Authentication** - Secure login with role-based access control
-- 🎨 **Modern UI** - Tailwind CSS + ShadCN UI components
-- 🌓 **Dark Mode** - Toggle between light and dark themes
-- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-- 🎭 **Smooth Animations** - Framer Motion for delightful user experience
-- 📊 **Interactive Charts** - Recharts for data visualization
-- 🔍 **Advanced Search** - Filter and search across all modules
-- 📄 **Export Data** - Export tables to Excel/CSV
-- 🐳 **Docker Support** - Easy deployment with Docker Compose
+## Quick Setup
 
-## 🛠️ Tech Stack
-
-### Backend
-- **Node.js** + **Express.js** - Server framework
-- **PostgreSQL** - Database
-- **Sequelize ORM** - Database modeling
-- **JWT** - Authentication
-- **Multer** - File uploads
-- **PDFKit** - PDF generation
-- **Bcrypt** - Password hashing
-
-### Frontend
-- **React 18** - UI framework
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **ShadCN UI** - Component library
-- **React Router** - Navigation
-- **TanStack Query** - Data fetching
-- **Zustand** - State management
-- **Framer Motion** - Animations
-- **Recharts** - Charts
-- **Axios** - HTTP client
-
-## 📋 Prerequisites
-
-- Node.js (v18 or higher)
-- PostgreSQL (v14 or higher)
+### Prerequisites
+- Node.js (v16 or higher)
+- PostgreSQL (v12 or higher)
 - npm or yarn
 
-## 🚀 Quick Start
+### Backend Setup
 
-### 1. Clone the Repository
+1. Navigate to backend folder:
+   ```bash
+   cd backend
+   ```
 
-```powershell
-git clone <repository-url>
-cd Asset-Management-KT-Solutions-
-```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### 2. Setup Backend
+3. Create `.env` file in backend folder:
+   ```
+   PORT=5000
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=asset_management
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+   JWT_SECRET=your_secret_key_here
+   NODE_ENV=development
+   CORS_ORIGIN=http://localhost:3000
+   ```
 
-```powershell
-cd backend
-npm install
-```
+4. Create database in PostgreSQL:
+   ```sql
+   CREATE DATABASE asset_management;
+   ```
 
-Create `.env` file:
-```env
-NODE_ENV=development
-PORT=5000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=asset_management
-DB_USER=postgres
-DB_PASSWORD=postgres
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
-JWT_EXPIRE=7d
-MAX_FILE_SIZE=5242880
-UPLOAD_PATH=./uploads
-CORS_ORIGIN=http://localhost:3000
-```
+5. Initialize and seed database:
+   ```bash
+   node init-db.js
+   node seed.js
+   ```
 
-Setup database:
-```powershell
-# Create database
-psql -U postgres -c "CREATE DATABASE asset_management;"
+6. Start backend server:
+   ```bash
+   npm run dev
+   ```
 
-# Run seed data
-node seed.js
+   Backend runs on: http://localhost:5000
 
-# Start server
-npm run dev
-```
+### Frontend Setup
 
-### 3. Setup Frontend
+1. Navigate to frontend folder:
+   ```bash
+   cd frontend
+   ```
 
-```powershell
-cd ../frontend
-npm install
-```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Create `.env` file:
-```env
-VITE_API_URL=http://localhost:5000/api
-```
+3. Create `.env` file in frontend folder:
+   ```
+   VITE_API_URL=http://localhost:5000/api
+   ```
 
-Start development server:
-```powershell
-npm run dev
-```
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
 
-### 4. Access the Application
+   Frontend runs on: http://localhost:3000
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000/api
+## Default Login Credentials
 
-### Default Credentials
+After running seed.js, use these credentials:
 
-**Admin Account:**
-- Email: `admin@assetmanagement.com`
-- Password: `admin123`
+### Admin Account
+- **Email**: admin@assetmanagement.com
+- **Password**: admin123
+- **Access**: Full system control
 
-**Manager Account:**
-- Email: `manager@assetmanagement.com`
-- Password: `manager123`
+### Manager Account
+- **Email**: manager@assetmanagement.com  
+- **Password**: manager123
+- **Access**: Manage assets and employees
 
-## 🐳 Docker Deployment
+### Employee Account
+- **Email**: john.doe@company.com
+- **Password**: employee123
+- **Access**: View assigned assets only
 
-### Using Docker Compose
+## Usage
 
-```powershell
-# Build and start all services
-docker-compose up -d
+### For Admins/Managers:
 
-# View logs
-docker-compose logs -f
+1. **Add Assets**: 
+   - Go to Assets → Add New Asset
+   - Fill in details (tag, serial, category, make, model)
+   - Upload image (optional)
 
-# Stop services
-docker-compose down
+2. **Add Employees**:
+   - Go to Employees → Add New Employee
+   - Enter employee details
+   - Assign department and designation
 
-# Stop and remove volumes
-docker-compose down -v
-```
+3. **Assign Assets**:
+   - Go to Asset History → Issue Asset
+   - Select employee and available asset
+   - Confirm assignment
 
-The application will be available at:
-- Frontend: http://localhost
-- Backend API: http://localhost:5000/api
+4. **Return Assets**:
+   - Go to Asset History → Return Asset
+   - Select assigned asset
+   - Add condition and notes
 
-### Seed Database in Docker
+5. **View Reports**:
+   - Dashboard: Overview statistics
+   - Stock View: Detailed inventory reports
+   - Asset History: Complete audit trail
 
-```powershell
-docker-compose exec backend node seed.js
-```
+### For Employees:
 
-## 📁 Project Structure
+1. **View Dashboard**:
+   - See all assets assigned to you
+   - Check asset details and conditions
+
+2. **Click on Employee Name**:
+   - View asset assignment history
+   - See past and current assets
+
+## Tech Stack
+
+### Backend
+- Node.js + Express
+- PostgreSQL (Database)
+- Sequelize (ORM)
+- JWT (Authentication)
+- Bcrypt (Password hashing)
+- Multer (File uploads)
+
+### Frontend
+- React 18
+- Vite (Build tool)
+- Tailwind CSS (Styling)
+- TanStack Query (Data fetching)
+- Zustand (State management)
+- React Router (Navigation)
+- Framer Motion (Animations)
+
+## Project Structure
 
 ```
 Asset-Management-KT-Solutions-/
 ├── backend/
-│   ├── config/          # Database and app configuration
-│   ├── controllers/     # Route controllers
-│   ├── middleware/      # Custom middleware
-│   ├── models/          # Sequelize models
+│   ├── config/          # Database configuration
+│   ├── controllers/     # Business logic
+│   ├── middleware/      # Auth, validation, error handling
+│   ├── models/          # Database models
 │   ├── routes/          # API routes
-│   ├── uploads/         # File uploads directory
-│   ├── server.js        # Express server
-│   ├── seed.js          # Database seeder
-│   └── package.json
+│   ├── uploads/         # Asset images
+│   ├── init-db.js      # Database initialization
+│   ├── seed.js         # Sample data
+│   └── server.js       # Entry point
+│
 ├── frontend/
 │   ├── src/
-│   │   ├── components/  # Reusable components
-│   │   │   └── ui/      # UI components (ShadCN)
-│   │   ├── lib/         # Utilities and API client
+│   │   ├── components/  # Reusable UI components
 │   │   ├── pages/       # Page components
-│   │   ├── store/       # Zustand stores
-│   │   ├── App.jsx      # Main app component
-│   │   └── main.jsx     # Entry point
-│   ├── public/
-│   └── package.json
-├── docker-compose.yml
+│   │   ├── store/       # State management
+│   │   ├── lib/         # Utilities and API
+│   │   └── App.jsx      # Main app component
+│   └── index.html
+│
 └── README.md
+
 ```
 
-## 🔑 API Endpoints
+## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user
-- `PUT /api/auth/profile` - Update profile
-- `PUT /api/auth/password` - Change password
-
-### Employees
-- `GET /api/employees` - Get all employees (with filters)
-- `GET /api/employees/:id` - Get employee by ID
-- `POST /api/employees` - Create employee (Admin/Manager)
-- `PUT /api/employees/:id` - Update employee (Admin/Manager)
-- `DELETE /api/employees/:id` - Delete employee (Admin)
-- `GET /api/employees/departments/list` - Get departments
-
-### Categories
-- `GET /api/categories` - Get all categories
-- `GET /api/categories/:id` - Get category by ID
-- `POST /api/categories` - Create category (Admin/Manager)
-- `PUT /api/categories/:id` - Update category (Admin/Manager)
-- `DELETE /api/categories/:id` - Delete category (Admin)
+- POST `/api/auth/register` - Register new user
+- POST `/api/auth/login` - User login
+- GET `/api/auth/me` - Get current user
 
 ### Assets
-- `GET /api/assets` - Get all assets (with filters)
-- `GET /api/assets/:id` - Get asset by ID
-- `POST /api/assets` - Create asset (Admin/Manager)
-- `PUT /api/assets/:id` - Update asset (Admin/Manager)
-- `DELETE /api/assets/:id` - Delete asset (Admin)
-- `GET /api/assets/stock/summary` - Get stock summary
+- GET `/api/assets` - Get all assets (paginated)
+- GET `/api/assets/my-assets` - Get employee's assigned assets
+- GET `/api/assets/:id` - Get asset details
+- POST `/api/assets` - Create asset (Admin/Manager)
+- PUT `/api/assets/:id` - Update asset (Admin/Manager)
+- DELETE `/api/assets/:id` - Delete asset (Admin only)
+
+### Employees
+- GET `/api/employees` - Get all employees
+- GET `/api/employees/:id` - Get employee details
+- GET `/api/employees/:id/assets` - Get employee's assets
+- POST `/api/employees` - Create employee (Admin/Manager)
+- PUT `/api/employees/:id` - Update employee (Admin/Manager)
+- DELETE `/api/employees/:id` - Delete employee (Admin only)
 
 ### Asset History
-- `GET /api/asset-history` - Get asset history (with filters)
-- `GET /api/asset-history/timeline/:assetId` - Get asset timeline
-- `GET /api/asset-history/report/pdf` - Generate PDF report
-- `POST /api/asset-history/issue` - Issue asset (Admin/Manager)
-- `POST /api/asset-history/return` - Return asset (Admin/Manager)
-- `POST /api/asset-history/scrap` - Scrap asset (Admin)
+- GET `/api/asset-history` - Get history records
+- POST `/api/asset-history/issue` - Assign asset to employee
+- POST `/api/asset-history/return` - Return asset from employee
+- POST `/api/asset-history/scrap` - Mark asset as scrapped
 
-## 👥 User Roles
+## Troubleshooting
 
-### Admin
-- Full access to all features
-- Can create, edit, and delete all records
-- Can scrap assets
-- Can manage users
+### Backend won't start
+- Check if PostgreSQL is running
+- Verify database credentials in `.env`
+- Ensure database exists: `CREATE DATABASE asset_management;`
+- Run `node init-db.js` to create tables
 
-### Manager
-- Can view all records
-- Can create and edit employees, categories, and assets
-- Can issue and return assets
-- Cannot delete or scrap assets
+### Frontend can't connect to backend
+- Verify backend is running on port 5000
+- Check VITE_API_URL in frontend `.env`
+- Ensure CORS_ORIGIN in backend `.env` matches frontend URL
 
-### Employee
-- Can view their own assigned assets
-- Limited access to other features
+### Login fails
+- Run `node seed.js` to create default users
+- Check if JWT_SECRET is set in backend `.env`
+- Clear browser localStorage and try again
 
-## 🎨 UI Features
+## Support
 
-- **Clean Modern Design** - Professional card-based layout
-- **Dark/Light Theme** - Toggle between themes
-- **Responsive Tables** - Advanced filtering and sorting
-- **Status Badges** - Color-coded status indicators
-- **Loading States** - Skeleton loaders for better UX
-- **Toast Notifications** - Success/error messages
-- **Smooth Animations** - Page transitions and interactions
-- **Form Validation** - Client and server-side validation
-
-## 📊 Database Schema
-
-### Users
-- id, name, email, password, role, status
-
-### Employees
-- id, employeeId, name, department, designation, contact, email, branch, status
-
-### Categories
-- id, name, code, description, status
-
-### Assets
-- id, assetTag, serialNumber, categoryId, make, model, specifications, purchaseDate, purchasePrice, warrantyExpiry, vendor, branch, location, status, condition, imageUrl, notes
-
-### AssetHistory
-- id, assetId, employeeId, action, actionDate, condition, reason, performedBy, notes
-
-## 🔒 Security Features
-
-- Password hashing with bcrypt
-- JWT token authentication
-- HTTP security headers with Helmet
-- Rate limiting
-- CORS protection
-- Input validation and sanitization
-- SQL injection prevention (Sequelize ORM)
-- File upload restrictions
-
-## 🚢 Production Deployment
-
-### Environment Variables
-
-Update the following for production:
-
-**Backend:**
-```env
-NODE_ENV=production
-JWT_SECRET=<strong-random-secret>
-DB_PASSWORD=<secure-password>
-```
-
-**Frontend:**
-```env
-VITE_API_URL=https://your-api-domain.com/api
-```
-
-### Deployment Platforms
-
-- **Backend**: Heroku, AWS, DigitalOcean, Railway
-- **Frontend**: Vercel, Netlify, AWS S3 + CloudFront
-- **Database**: AWS RDS, DigitalOcean Managed Databases
-
-## 🧪 Testing
-
-```powershell
-# Backend
-cd backend
-npm test
-
-# Frontend
-cd frontend
-npm test
-```
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 👨‍💻 Author
-
-Built with ❤️ for efficient asset management
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-## 📞 Support
-
-For support, email support@assetmanagement.com or open an issue in the repository.
-
----
-
-**Happy Asset Managing! 🎉**
+For issues or questions, check the code comments or contact the development team.

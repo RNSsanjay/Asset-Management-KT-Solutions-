@@ -23,10 +23,7 @@ const Asset = sequelize.define('Asset', {
         type: DataTypes.UUID,
         allowNull: false,
         field: 'category_id',
-        references: {
-            model: 'categories',
-            key: 'id'
-        }
+        references: { model: 'categories', key: 'id' }
     },
     make: {
         type: DataTypes.STRING,
@@ -36,9 +33,7 @@ const Asset = sequelize.define('Asset', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    specifications: {
-        type: DataTypes.TEXT
-    },
+    specifications: DataTypes.TEXT,
     purchaseDate: {
         type: DataTypes.DATE,
         field: 'purchase_date'
@@ -52,16 +47,12 @@ const Asset = sequelize.define('Asset', {
         type: DataTypes.DATE,
         field: 'warranty_expiry'
     },
-    vendor: {
-        type: DataTypes.STRING
-    },
+    vendor: DataTypes.STRING,
     branch: {
         type: DataTypes.STRING,
         defaultValue: 'Head Office'
     },
-    location: {
-        type: DataTypes.STRING
-    },
+    location: DataTypes.STRING,
     status: {
         type: DataTypes.ENUM('Available', 'Assigned', 'Under Repair', 'Scrapped'),
         defaultValue: 'Available'
@@ -74,9 +65,7 @@ const Asset = sequelize.define('Asset', {
         type: DataTypes.STRING,
         field: 'image_url'
     },
-    notes: {
-        type: DataTypes.TEXT
-    }
+    notes: DataTypes.TEXT
 }, {
     timestamps: true,
     tableName: 'assets'

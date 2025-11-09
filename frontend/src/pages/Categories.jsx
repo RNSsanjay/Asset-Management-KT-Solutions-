@@ -16,23 +16,17 @@ export default function Categories() {
     const [editingCategory, setEditingCategory] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { user } = useAuthStore();
 
-    // Fetch categories
-    const { data: categories = [], isLoading } = useQuery({
-        queryKey: ['categories', searchTerm, statusFilter],
-        queryFn: async () => {
-            const params = new URLSearchParams({
-                ...(searchTerm && { search: searchTerm }),
-                ...(statusFilter && { status: statusFilter }),
-            });
-            const response = await api.get(`/categories?${params}`);
-            return response.data;
-        },
-    });
+    // Check if user can manage categories
+    const canManage = user?.role === 'Admin' || user?.role === 'Manager';
 
-    // Form state
+    // Form data state
     const [formData, setFormData] = useState({
         name: '',
         code: '',
@@ -40,7 +34,20 @@ export default function Categories() {
         status: 'active',
     });
 
-    // Create/Update mutation
+    // Fetch categories from API
+    const { data: categories = [], isLoading } = useQuery({
+        queryKey: ['categories', searchTerm, statusFilter],
+        queryFn: async () => {
+            const params = new URLSearchParams();
+            if (searchTerm) params.append('search', searchTerm);
+            if (statusFilter) params.append('status', statusFilter);
+
+            const response = await api.get(`/categories?${params}`);
+            return response.data;
+        },
+    });
+
+    // Save category (create or update)
     const saveMutation = useMutation({
         mutationFn: async (data) => {
             if (editingCategory) {
@@ -66,7 +73,7 @@ export default function Categories() {
         },
     });
 
-    // Delete mutation
+    // Delete category
     const deleteMutation = useMutation({
         mutationFn: async (id) => {
             return await api.delete(`/categories/${id}`);
@@ -121,23 +128,19 @@ export default function Categories() {
         setIsConfirmOpen(true);
     };
 
-    // auth
-    const { user } = useAuthStore();
-    const canManage = user?.role === 'Admin' || user?.role === 'Manager';
-
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [pendingDeleteId, setPendingDeleteId] = useState(null);
-
     const confirmDelete = () => {
-        if (pendingDeleteId) deleteMutation.mutate(pendingDeleteId);
+        if (pendingDeleteId) {
+            deleteMutation.mutate(pendingDeleteId);
+        }
         setIsConfirmOpen(false);
         setPendingDeleteId(null);
     };
 
     const getStatusColor = (status) => {
-        return status === 'active'
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+        if (status === 'active') {
+            return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+        }
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
     };
 
     return (

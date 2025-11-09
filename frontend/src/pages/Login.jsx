@@ -115,11 +115,11 @@ export default function Login() {
                             </p>
                         </div>
 
-                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                        {/* <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                             <p className="text-xs text-muted-foreground mb-2">Demo Credentials:</p>
                             <p className="text-xs font-mono">admin@assetmanagement.com / admin123</p>
                             <p className="text-xs font-mono">manager@assetmanagement.com / manager123</p>
-                        </div>
+                        </div> */}
                     </CardContent>
                 </Card>
             </motion.div>

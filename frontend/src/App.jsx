@@ -10,6 +10,7 @@ import Employees from '@/pages/Employees';
 import Categories from '@/pages/Categories';
 import AssetHistory from '@/pages/AssetHistory';
 import StockView from '@/pages/StockView';
+import AssetRequests from '@/pages/AssetRequests';
 import useAuthStore from '@/store/authStore';
 
 function App() {
@@ -18,11 +19,16 @@ function App() {
     return (
         <>
             <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-                <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
+                <Route
+                    path="/login"
+                    element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
+                />
+                <Route
+                    path="/register"
+                    element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
+                />
 
-                {/* Protected routes */}
+                {/* Protected pages - need authentication */}
                 <Route element={<ProtectedRoute />}>
                     <Route element={<Layout />}>
                         <Route path="/dashboard" element={<Dashboard />} />
@@ -31,12 +37,18 @@ function App() {
                         <Route path="/categories" element={<Categories />} />
                         <Route path="/history" element={<AssetHistory />} />
                         <Route path="/stock" element={<StockView />} />
+                        <Route path="/requests" element={<AssetRequests />} />
                     </Route>
                 </Route>
 
-                {/* Default redirect */}
-                <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
-                <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+                <Route
+                    path="/"
+                    element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+                />
+                <Route
+                    path="*"
+                    element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+                />
             </Routes>
             <Toaster />
         </>

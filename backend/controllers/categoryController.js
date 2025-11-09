@@ -1,15 +1,17 @@
 const { Category, Asset } = require('../models');
 const { Op } = require('sequelize');
 
-// @desc    Get all categories
-// @route   GET /api/categories
-// @access  Private
+// Get all categories
 const getCategories = async (req, res, next) => {
     try {
         const { status, search } = req.query;
 
         const where = {};
-        if (status) where.status = status;
+
+        if (status) {
+            where.status = status;
+        }
+
         if (search) {
             where[Op.or] = [
                 { name: { [Op.iLike]: `%${search}%` } },
@@ -28,7 +30,7 @@ const getCategories = async (req, res, next) => {
             order: [['name', 'ASC']]
         });
 
-        // Add asset count
+        // Count assets for each category
         const categoriesWithCount = categories.map(cat => {
             const catData = cat.toJSON();
             catData.assetCount = catData.assets ? catData.assets.length : 0;
@@ -42,9 +44,7 @@ const getCategories = async (req, res, next) => {
     }
 };
 
-// @desc    Get category by ID
-// @route   GET /api/categories/:id
-// @access  Private
+// Get single category
 const getCategoryById = async (req, res, next) => {
     try {
         const category = await Category.findByPk(req.params.id);
@@ -59,14 +59,12 @@ const getCategoryById = async (req, res, next) => {
     }
 };
 
-// @desc    Create new category
-// @route   POST /api/categories
-// @access  Private (Admin/Manager)
+// Create category
 const createCategory = async (req, res, next) => {
     try {
         const { code } = req.body;
 
-        // Convert code to uppercase
+        // Make code uppercase
         req.body.code = code.toUpperCase();
 
         const category = await Category.create(req.body);
@@ -76,9 +74,7 @@ const createCategory = async (req, res, next) => {
     }
 };
 
-// @desc    Update category
-// @route   PUT /api/categories/:id
-// @access  Private (Admin/Manager)
+// Update category
 const updateCategory = async (req, res, next) => {
     try {
         const category = await Category.findByPk(req.params.id);
