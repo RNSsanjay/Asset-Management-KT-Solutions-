@@ -1,5 +1,6 @@
 const { Asset, Category, AssetHistory, Employee } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/db');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -81,15 +82,28 @@ const getAssetById = async (req, res, next) => {
 // @route   POST /api/assets
 // @access  Private (Admin/Manager)
 const createAsset = async (req, res, next) => {
+    const transaction = await sequelize.transaction();
+
     try {
         const assetData = { ...req.body };
+
+        // Validate required fields
+        if (!assetData.assetTag || !assetData.categoryId) {
+            await transaction.rollback();
+            if (req.file) {
+                await fs.unlink(req.file.path).catch(console.error);
+            }
+            return res.status(400).json({
+                message: 'Asset tag and category are required'
+            });
+        }
 
         // Handle file upload
         if (req.file) {
             assetData.imageUrl = `/uploads/${req.file.filename}`;
         }
 
-        const asset = await Asset.create(assetData);
+        const asset = await Asset.create(assetData, { transaction });
 
         // Create purchase history
         await AssetHistory.create({
@@ -99,8 +113,12 @@ const createAsset = async (req, res, next) => {
             condition: asset.condition,
             performedBy: req.user.id,
             notes: 'Asset purchased and added to inventory'
-        });
+        }, { transaction });
 
+        // Commit transaction
+        await transaction.commit();
+
+        // Fetch complete asset with associations
         const fullAsset = await Asset.findByPk(asset.id, {
             include: [{
                 model: Category,
@@ -111,11 +129,31 @@ const createAsset = async (req, res, next) => {
 
         res.status(201).json(fullAsset);
     } catch (error) {
+        await transaction.rollback();
+        console.error('Create asset error:', error);
+
         // Delete uploaded file if asset creation fails
         if (req.file) {
             await fs.unlink(req.file.path).catch(console.error);
         }
-        next(error);
+
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(e => e.message)
+            });
+        }
+
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({
+                message: 'Asset tag already exists'
+            });
+        }
+
+        res.status(500).json({
+            message: 'Error creating asset',
+            error: error.message
+        });
     }
 };
 
@@ -123,10 +161,16 @@ const createAsset = async (req, res, next) => {
 // @route   PUT /api/assets/:id
 // @access  Private (Admin/Manager)
 const updateAsset = async (req, res, next) => {
+    const transaction = await sequelize.transaction();
+
     try {
-        const asset = await Asset.findByPk(req.params.id);
+        const asset = await Asset.findByPk(req.params.id, { transaction });
 
         if (!asset) {
+            await transaction.rollback();
+            if (req.file) {
+                await fs.unlink(req.file.path).catch(console.error);
+            }
             return res.status(404).json({ message: 'Asset not found' });
         }
 
@@ -142,8 +186,12 @@ const updateAsset = async (req, res, next) => {
             updateData.imageUrl = `/uploads/${req.file.filename}`;
         }
 
-        await asset.update(updateData);
+        await asset.update(updateData, { transaction });
 
+        // Commit transaction
+        await transaction.commit();
+
+        // Fetch updated asset with associations
         const updatedAsset = await Asset.findByPk(asset.id, {
             include: [{
                 model: Category,
@@ -154,10 +202,24 @@ const updateAsset = async (req, res, next) => {
 
         res.json(updatedAsset);
     } catch (error) {
+        await transaction.rollback();
+        console.error('Update asset error:', error);
+
         if (req.file) {
             await fs.unlink(req.file.path).catch(console.error);
         }
-        next(error);
+
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(e => e.message)
+            });
+        }
+
+        res.status(500).json({
+            message: 'Error updating asset',
+            error: error.message
+        });
     }
 };
 

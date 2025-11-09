@@ -175,11 +175,37 @@ export default function AssetHistory() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validation
         if (actionType === 'issue') {
+            if (!formData.assetId || !formData.employeeId) {
+                toast({
+                    title: 'Validation Error',
+                    description: 'Please select both asset and employee',
+                    variant: 'destructive',
+                });
+                return;
+            }
             issueMutation.mutate(formData);
         } else if (actionType === 'return') {
+            if (!formData.assetId) {
+                toast({
+                    title: 'Validation Error',
+                    description: 'Please select an asset to return',
+                    variant: 'destructive',
+                });
+                return;
+            }
             returnMutation.mutate(formData);
         } else if (actionType === 'scrap') {
+            if (!formData.assetId) {
+                toast({
+                    title: 'Validation Error',
+                    description: 'Please select an asset to scrap',
+                    variant: 'destructive',
+                });
+                return;
+            }
             scrapMutation.mutate(formData);
         }
     };

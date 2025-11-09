@@ -205,6 +205,17 @@ export default function Assets() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validation
+        if (!formData.assetTag || !formData.categoryId) {
+            toast({
+                title: 'Validation Error',
+                description: 'Asset tag and category are required',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         saveMutation.mutate(formData);
     };
 

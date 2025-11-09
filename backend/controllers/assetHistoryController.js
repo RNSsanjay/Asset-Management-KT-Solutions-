@@ -1,41 +1,58 @@
 const { Asset, AssetHistory, Employee, User } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/db');
 const PDFDocument = require('pdfkit');
 
 // @desc    Issue asset to employee
 // @route   POST /api/asset-history/issue
 // @access  Private (Admin/Manager)
 const issueAsset = async (req, res, next) => {
+    const transaction = await sequelize.transaction();
+
     try {
         const { assetId, employeeId, condition, notes } = req.body;
 
+        // Validate required fields
+        if (!assetId || !employeeId) {
+            await transaction.rollback();
+            return res.status(400).json({
+                message: 'Asset ID and Employee ID are required'
+            });
+        }
+
         // Check if asset exists and is available
-        const asset = await Asset.findByPk(assetId);
+        const asset = await Asset.findByPk(assetId, { transaction });
         if (!asset) {
+            await transaction.rollback();
             return res.status(404).json({ message: 'Asset not found' });
         }
 
         if (asset.status !== 'Available') {
+            await transaction.rollback();
             return res.status(400).json({
                 message: `Asset is currently ${asset.status}. Only available assets can be issued.`
             });
         }
 
         // Check if employee exists
-        const employee = await Employee.findByPk(employeeId);
+        const employee = await Employee.findByPk(employeeId, { transaction });
         if (!employee) {
+            await transaction.rollback();
             return res.status(404).json({ message: 'Employee not found' });
         }
 
         if (employee.status !== 'active') {
-            return res.status(400).json({ message: 'Cannot issue asset to inactive employee' });
+            await transaction.rollback();
+            return res.status(400).json({
+                message: 'Cannot issue asset to inactive employee'
+            });
         }
 
         // Update asset status
         await asset.update({
             status: 'Assigned',
             condition: condition || asset.condition
-        });
+        }, { transaction });
 
         // Create history record
         const history = await AssetHistory.create({
@@ -46,8 +63,12 @@ const issueAsset = async (req, res, next) => {
             condition: condition || asset.condition,
             performedBy: req.user.id,
             notes
-        });
+        }, { transaction });
 
+        // Commit transaction
+        await transaction.commit();
+
+        // Fetch complete record with associations
         const fullHistory = await AssetHistory.findByPk(history.id, {
             include: [
                 { model: Asset, as: 'asset' },
@@ -58,7 +79,20 @@ const issueAsset = async (req, res, next) => {
 
         res.status(201).json(fullHistory);
     } catch (error) {
-        next(error);
+        await transaction.rollback();
+        console.error('Issue asset error:', error);
+
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(e => e.message)
+            });
+        }
+
+        res.status(500).json({
+            message: 'Error issuing asset',
+            error: error.message
+        });
     }
 };
 
@@ -66,16 +100,28 @@ const issueAsset = async (req, res, next) => {
 // @route   POST /api/asset-history/return
 // @access  Private (Admin/Manager)
 const returnAsset = async (req, res, next) => {
+    const transaction = await sequelize.transaction();
+
     try {
         const { assetId, condition, reason, notes } = req.body;
 
+        // Validate required fields
+        if (!assetId) {
+            await transaction.rollback();
+            return res.status(400).json({
+                message: 'Asset ID is required'
+            });
+        }
+
         // Check if asset exists and is assigned
-        const asset = await Asset.findByPk(assetId);
+        const asset = await Asset.findByPk(assetId, { transaction });
         if (!asset) {
+            await transaction.rollback();
             return res.status(404).json({ message: 'Asset not found' });
         }
 
         if (asset.status !== 'Assigned') {
+            await transaction.rollback();
             return res.status(400).json({
                 message: 'Asset is not currently assigned to any employee'
             });
@@ -87,7 +133,8 @@ const returnAsset = async (req, res, next) => {
                 assetId,
                 action: 'Issue'
             },
-            order: [['actionDate', 'DESC']]
+            order: [['actionDate', 'DESC']],
+            transaction
         });
 
         // Determine new status based on condition
@@ -100,7 +147,7 @@ const returnAsset = async (req, res, next) => {
         await asset.update({
             status: newStatus,
             condition: condition || asset.condition
-        });
+        }, { transaction });
 
         // Create history record
         const history = await AssetHistory.create({
@@ -112,8 +159,12 @@ const returnAsset = async (req, res, next) => {
             reason,
             performedBy: req.user.id,
             notes
-        });
+        }, { transaction });
 
+        // Commit transaction
+        await transaction.commit();
+
+        // Fetch complete record with associations
         const fullHistory = await AssetHistory.findByPk(history.id, {
             include: [
                 { model: Asset, as: 'asset' },
@@ -124,7 +175,20 @@ const returnAsset = async (req, res, next) => {
 
         res.status(201).json(fullHistory);
     } catch (error) {
-        next(error);
+        await transaction.rollback();
+        console.error('Return asset error:', error);
+
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(e => e.message)
+            });
+        }
+
+        res.status(500).json({
+            message: 'Error returning asset',
+            error: error.message
+        });
     }
 };
 
@@ -132,16 +196,28 @@ const returnAsset = async (req, res, next) => {
 // @route   POST /api/asset-history/scrap
 // @access  Private (Admin)
 const scrapAsset = async (req, res, next) => {
+    const transaction = await sequelize.transaction();
+
     try {
         const { assetId, reason, notes } = req.body;
 
+        // Validate required fields
+        if (!assetId) {
+            await transaction.rollback();
+            return res.status(400).json({
+                message: 'Asset ID is required'
+            });
+        }
+
         // Check if asset exists
-        const asset = await Asset.findByPk(assetId);
+        const asset = await Asset.findByPk(assetId, { transaction });
         if (!asset) {
+            await transaction.rollback();
             return res.status(404).json({ message: 'Asset not found' });
         }
 
         if (asset.status === 'Assigned') {
+            await transaction.rollback();
             return res.status(400).json({
                 message: 'Cannot scrap an assigned asset. Please return it first.'
             });
@@ -151,7 +227,7 @@ const scrapAsset = async (req, res, next) => {
         await asset.update({
             status: 'Scrapped',
             condition: 'Poor'
-        });
+        }, { transaction });
 
         // Create history record
         const history = await AssetHistory.create({
@@ -162,8 +238,12 @@ const scrapAsset = async (req, res, next) => {
             reason,
             performedBy: req.user.id,
             notes
-        });
+        }, { transaction });
 
+        // Commit transaction
+        await transaction.commit();
+
+        // Fetch complete record with associations
         const fullHistory = await AssetHistory.findByPk(history.id, {
             include: [
                 { model: Asset, as: 'asset' },
@@ -173,7 +253,20 @@ const scrapAsset = async (req, res, next) => {
 
         res.status(201).json(fullHistory);
     } catch (error) {
-        next(error);
+        await transaction.rollback();
+        console.error('Scrap asset error:', error);
+
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(e => e.message)
+            });
+        }
+
+        res.status(500).json({
+            message: 'Error scrapping asset',
+            error: error.message
+        });
     }
 };
 
